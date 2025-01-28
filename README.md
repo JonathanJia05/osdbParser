@@ -1,6 +1,6 @@
 # OsdbParser
 
-**OsdbParser** is a a tool I created for parsing `.osdb` files created by [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager)(It's basically a clone of the read logic). It extracts collection and beatmap data and exports the results to a JSON file to be used in other applications.
+**OsdbParser** is a a tool I created for parsing `.osdb` files created by [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager) (It's basically a clone of the read logic). It extracts collection and beatmap data and exports the results to a JSON file to be used in other applications.
 
 ---
 
@@ -83,7 +83,7 @@ dotnet run --project osdbParser -- "examples/sample.osdb" "output/collections.js
 
 ## Acknowledgements
 
-This tool is just a clone and implification of [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager).
+This tool is just a clone and simplification of [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager).
 
 ---
 
