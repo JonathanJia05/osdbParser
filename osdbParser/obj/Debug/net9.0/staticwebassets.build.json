@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "u+H00ru2fX1hD7NvIvD0WBgn26jeWlxfNxnCwtG7vw4=",
+  "Source": "osdbParser",
+  "BasePath": "_content/osdbParser",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

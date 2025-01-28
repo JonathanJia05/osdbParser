@@ -1,86 +1,112 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
+using SharpCompress.Archives;
+using SharpCompress.Archives.GZip;
 
 namespace OsdbReader
 {
-    //class to read .osdb files
     public class OsdbCollectionHandler
     {
-        private static readonly Dictionary<string, int> Versions = new()
+        private readonly Dictionary<string, int> _versions = new()
         {
-            { "o!dm", 1 },   { "o!dm2", 2 },   { "o!dm3", 3 },
-            { "o!dm4", 4 },  { "o!dm5", 5 },   { "o!dm6", 6 },
-            { "o!dm7", 7 },  { "o!dm8", 8 },
-            { "o!dm7min", 1007 },
-            { "o!dm8min", 1008 }
+            {"o!dm", 1},
+            {"o!dm2", 2},
+            {"o!dm3", 3},
+            {"o!dm4", 4},
+            {"o!dm5", 5},
+            {"o!dm6", 6},
+            {"o!dm7", 7},
+            {"o!dm8", 8},
+            {"o!dm7min", 1007},
+            {"o!dm8min", 1008},
         };
 
-        //reads a .osdb file from disk and returns a list of collections
         public List<Collection> ReadOsdb(string filePath)
         {
             using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            using var reader = new BinaryReader(fileStream, Encoding.UTF8);
+            using var memoryStream = new MemoryStream();
+            fileStream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
 
-            //read the version string
-            string versionString = reader.ReadString();
-            if (!Versions.TryGetValue(versionString, out int fileVersion))
-                throw new Exception($"Unknown .osdb version: {versionString}");
+            using var reader = new BinaryReader(memoryStream);
 
-            //if version >= 7, then the remainder is a GZip stream
-            if (fileVersion >= 7)
+            //1. Read outer version string
+            string outerVersion = reader.ReadString();
+            Console.WriteLine($"Outer version string: {outerVersion}");
+
+            if (!_versions.TryGetValue(outerVersion, out int outerVersionNumber))
             {
-                using var compressedStream = new MemoryStream();
-                fileStream.CopyTo(compressedStream);
-                compressedStream.Position = 0;
+                throw new Exception($"Unknown outer version: {outerVersion}");
+            }
 
-                //decompress the GZip data
-                using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);
-                using var decompressedStream = new MemoryStream();
-                gzip.CopyTo(decompressedStream);
-                decompressedStream.Position = 0;
+            //2. Handle GZip if version >= 7
+            if (outerVersionNumber >= 7)
+            {
+                using var archive = GZipArchive.Open(memoryStream);
+                var entry = archive.Entries.First();
+                using var extractedStream = new MemoryStream();
+                entry.WriteTo(extractedStream);
+                extractedStream.Position = 0;
+                using var innerReader = new BinaryReader(extractedStream);
 
-                using var decompressedReader = new BinaryReader(decompressedStream, Encoding.UTF8);
-                return ReadCollections(decompressedReader, versionString);
+                return ParseOsdbInner(innerReader);
             }
             else
             {
-                //if version < 7, it has no GZip compression
-                return ReadCollections(reader, versionString);
+                return ParseOsdbInner(reader);
             }
         }
 
-        //parse collections from an uncompressed BinaryReader.
-        private List<Collection> ReadCollections(BinaryReader reader, string versionString)
+        private List<Collection> ParseOsdbInner(BinaryReader reader)
         {
+            //3. Read inner version string
+            string innerVersion = reader.ReadString();
+            Console.WriteLine($"Inner version string: {innerVersion}");
+
+            if (!_versions.TryGetValue(innerVersion, out int fileVersion))
+            {
+                throw new Exception($"Unknown inner version: {innerVersion}");
+            }
+
+            //4. Read file metadata
+            double dateRaw = reader.ReadDouble();
+            DateTime fileDate = DateTime.FromOADate(dateRaw);
+            Console.WriteLine($"File date: {fileDate}");
+
+            string editor = reader.ReadString();
+            Console.WriteLine($"Editor: {editor}");
+
+            int numberOfCollections = reader.ReadInt32();
+            Console.WriteLine($"Number of collections: {numberOfCollections}");
+
             var collections = new List<Collection>();
 
-            double fileDateValue = reader.ReadDouble();
-            DateTime fileDate = DateTime.FromOADate(fileDateValue);
-
-            string lastEditor = reader.ReadString();
-
-            int collectionCount = reader.ReadInt32();
-            for (int i = 0; i < collectionCount; i++)
+            for (int i = 0; i < numberOfCollections; i++)
             {
                 var collection = new Collection
                 {
-                    Name = reader.ReadString(),
-                    OnlineId = reader.ReadInt32()
+                    Name = reader.ReadString()
                 };
 
-                int beatmapCount = reader.ReadInt32();
-                for (int j = 0; j < beatmapCount; j++)
+                if (fileVersion >= 7)
                 {
-                    var beatmap = new Beatmap();
+                    collection.OnlineId = reader.ReadInt32();
+                }
 
-                    beatmap.MapId = reader.ReadInt32();
-                    beatmap.MapSetId = reader.ReadInt32();
+                int numberOfBeatmaps = reader.ReadInt32();
+                Console.WriteLine($"Collection {i + 1}: {collection.Name}, Beatmaps: {numberOfBeatmaps}");
 
-                    bool isMinimal = versionString.EndsWith("min");
-                    if (!isMinimal)
+                for (int j = 0; j < numberOfBeatmaps; j++)
+                {
+                    var beatmap = new Beatmap
+                    {
+                        MapId = reader.ReadInt32(),
+                    };
+
+                    if (fileVersion >= 2)
+                    {
+                        beatmap.MapSetId = reader.ReadInt32();
+                    }
+
+                    if (!innerVersion.EndsWith("min"))
                     {
                         beatmap.ArtistRoman = reader.ReadString();
                         beatmap.TitleRoman = reader.ReadString();
@@ -89,22 +115,17 @@ namespace OsdbReader
 
                     beatmap.Md5 = reader.ReadString();
 
-                    //if the file version >= 4, read user comment
-                    if (Versions[versionString] >= 4)
+                    if (fileVersion >= 4)
                     {
                         beatmap.UserComment = reader.ReadString();
                     }
 
-                    //ff the nfile version >= 8 or >=5 for full, read play mode
-                    if (Versions[versionString] >= 8 ||
-                       (Versions[versionString] >= 5 && !isMinimal))
+                    if (fileVersion >= 8 || (fileVersion >= 5 && !innerVersion.EndsWith("min")))
                     {
                         beatmap.PlayMode = reader.ReadByte();
                     }
 
-                    //if the file version >= 8 or >=6 for full, read stars
-                    if (Versions[versionString] >= 8 ||
-                       (Versions[versionString] >= 6 && !isMinimal))
+                    if (fileVersion >= 8 || (fileVersion >= 6 && !innerVersion.EndsWith("min")))
                     {
                         beatmap.StarsNomod = reader.ReadDouble();
                     }
@@ -112,11 +133,10 @@ namespace OsdbReader
                     collection.Beatmaps.Add(beatmap);
                 }
 
-                //if the file version >= 3, get the number of hash only maps
-                if (Versions[versionString] >= 3)
+                if (fileVersion >= 3)
                 {
-                    int hashCount = reader.ReadInt32();
-                    for (int k = 0; k < hashCount; k++)
+                    int numberOfHashes = reader.ReadInt32();
+                    for (int k = 0; k < numberOfHashes; k++)
                     {
                         collection.HashOnlyBeatmaps.Add(reader.ReadString());
                     }
@@ -125,13 +145,13 @@ namespace OsdbReader
                 collections.Add(collection);
             }
 
-            //check if footer is "By Piotrekol"
             string footer = reader.ReadString();
             if (footer != "By Piotrekol")
             {
-                throw new Exception("File footer invalid, must be 'By Piotrekol'");
+                throw new Exception("Footer missing or invalid.");
             }
 
+            Console.WriteLine("FIle sucessfully parsed!");
             return collections;
         }
     }

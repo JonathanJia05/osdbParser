@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("osdbParser")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2d572cd26f6663bfc447b3229e4f81735a581952")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ac388a263a9f55925662f33ca18c19aadaa0f43d")]
 [assembly: System.Reflection.AssemblyProductAttribute("osdbParser")]
 [assembly: System.Reflection.AssemblyTitleAttribute("osdbParser")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
