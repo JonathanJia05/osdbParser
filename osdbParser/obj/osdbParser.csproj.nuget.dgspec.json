@@ -47,6 +47,10 @@
             "SharpCompress": {
               "target": "Package",
               "version": "[0.39.0, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[9.0.1, )"
             }
           },
           "imports": [

@@ -30,7 +30,7 @@ namespace OsdbReader
 
             //1. Read outer version string
             string outerVersion = reader.ReadString();
-            Console.WriteLine($"Outer version string: {outerVersion}");
+            //Console.WriteLine($"Outer version string: {outerVersion}");
 
             if (!_versions.TryGetValue(outerVersion, out int outerVersionNumber))
             {
@@ -59,7 +59,7 @@ namespace OsdbReader
         {
             //3. Read inner version string
             string innerVersion = reader.ReadString();
-            Console.WriteLine($"Inner version string: {innerVersion}");
+            //Console.WriteLine($"Inner version string: {innerVersion}");
 
             if (!_versions.TryGetValue(innerVersion, out int fileVersion))
             {
@@ -69,13 +69,13 @@ namespace OsdbReader
             //4. Read file metadata
             double dateRaw = reader.ReadDouble();
             DateTime fileDate = DateTime.FromOADate(dateRaw);
-            Console.WriteLine($"File date: {fileDate}");
+            //Console.WriteLine($"File date: {fileDate}");
 
             string editor = reader.ReadString();
-            Console.WriteLine($"Editor: {editor}");
+            //Console.WriteLine($"Editor: {editor}");
 
             int numberOfCollections = reader.ReadInt32();
-            Console.WriteLine($"Number of collections: {numberOfCollections}");
+            //Console.WriteLine($"Number of collections: {numberOfCollections}");
 
             var collections = new List<Collection>();
 
@@ -92,7 +92,7 @@ namespace OsdbReader
                 }
 
                 int numberOfBeatmaps = reader.ReadInt32();
-                Console.WriteLine($"Collection {i + 1}: {collection.Name}, Beatmaps: {numberOfBeatmaps}");
+                //Console.WriteLine($"Collection {i + 1}: {collection.Name}, Beatmaps: {numberOfBeatmaps}");
 
                 for (int j = 0; j < numberOfBeatmaps; j++)
                 {
@@ -151,7 +151,7 @@ namespace OsdbReader
                 throw new Exception("Footer missing or invalid.");
             }
 
-            Console.WriteLine("FIle sucessfully parsed!");
+            Console.WriteLine("File sucessfully parsed!");
             return collections;
         }
     }
