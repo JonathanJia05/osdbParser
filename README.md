@@ -73,7 +73,16 @@ dotnet run --project osdbParser -- "examples/sample.osdb" "output/collections.js
         "DiffName": "Difficulty Name",
         "Md5": "md5hash12345",
         "StarsNomod": 5.24
-      }
+      },
+      {
+        "MapId": 67890,
+        "ArtistRoman": "Artist Name",
+        "TitleRoman": "Song Title",
+        "DiffName": "Difficulty Name",
+        "Md5": "md5hash67890",
+        "StarsNomod": 1.4
+      },
+      ....
     ]
   }
 ]
