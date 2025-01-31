@@ -23,7 +23,7 @@
 ### 1. Clone repo
 
 ```bash
-git clone https://github.com/yourusername/OsdbParser.git
+git clone https://github.com/JonathanJia05/osdbParser.git
 cd osdbParser
 ```
 
