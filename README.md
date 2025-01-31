@@ -92,7 +92,7 @@ dotnet run --project osdbParser -- "examples/sample.osdb" "output/collections.js
 
 ## Acknowledgements
 
-This tool is just a clone and simplification of [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager).
+This tool is just a modification and simplification of [Piotrekol's CollectionManager](https://github.com/Piotrekol/CollectionManager).
 
 ---
 
